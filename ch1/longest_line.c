@@ -2,7 +2,7 @@
 #define MAXWIDTH 1000
 
 int mygetline(char line[], int maxline);
-int copy(char from[], char to[]);
+void copy(char from[], char to[]);
 
 int main() {
   int width;
@@ -38,7 +38,7 @@ int mygetline(char line[], int maxwidth) {
   return i;
 }
 
-int copy(char from[], char to[]) {
+void copy(char from[], char to[]) {
   int i = 0; 
 
   while ((to[i] = from[i]) != '\0')
