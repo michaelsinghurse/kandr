@@ -4,7 +4,7 @@
 #define MAXLINE 1000
 
 int mygetline(char s[], int m);
-void replacetabs(char s[], int m);
+void replacetabs(char s[], int m, int n);
 
 /*
  * Replace tabs in input with proper number of spaces
@@ -15,7 +15,7 @@ int main() {
   char line[MAXLINE];
 
   while ((len = mygetline(line, MAXLINE)) > 0) {
-    replacetabs(line, TABWIDTH);
+    replacetabs(line, TABWIDTH, MAXLINE);
     printf("%s", line);
   }
 
@@ -38,18 +38,6 @@ int mygetline(char s[], int max) {
   return i;
 }
 
-/*
- * copy the input string into a temporary array
- * maintain two pointers, i and j
- * use j to walk down the copy. for each j...
- * - if copy[j] IS NOT a tab
- *   - replace original[i] with copy[j]
- * - if copy[j] IS a tab
- *   - figure out how many spaces until next tab stop
- *   - replace original[i] to original[i+num] with spaces
- * - increment i and j by 1
- * add a null mark at original[i]
- */
 void replacetabs(char original[], int tabwidth, int maxline) {
   int i, j;
   char copy[maxline];
@@ -64,7 +52,7 @@ void replacetabs(char original[], int tabwidth, int maxline) {
 
   i = 0;
   j = 0;
-  while (1) {
+  while (i < maxline - 1) {
     if (copy[j] == '\t') {
       int spaces = tabwidth - (i % tabwidth);
 
@@ -73,6 +61,8 @@ void replacetabs(char original[], int tabwidth, int maxline) {
         ++i;
         --spaces;
       }
+
+      --i;
     } else
       original[i] = copy[j];
 
@@ -82,4 +72,7 @@ void replacetabs(char original[], int tabwidth, int maxline) {
     ++i;
     ++j;
   }
+
+  if (i == maxline - 1)
+    original[i] = '\0';
 }
