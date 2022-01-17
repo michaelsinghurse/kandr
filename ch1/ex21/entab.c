@@ -38,32 +38,29 @@ void entab(char line[], int tabwidth) {
   int c;
   int i = 0;
   int j = 0;
-  int in_whitespace = 0;
   int num_spaces = 0;
 
   while ((c = line[i]) != '\0') {
-    if (c == ' ' && !in_whitespace) {
-      in_whitespace = 1;
+    if (c == ' ' && num_spaces == 0) {
       num_spaces = 1;
-    } else if (c == ' ' && in_whitespace) {
+    } else if (c == ' ' && num_spaces > 0) {
       num_spaces += 1;
-    } else if (c != ' ' && !in_whitespace) {
+    } else if (c != ' ' && num_spaces == 0) {
       line[j] = c;
       ++j;
-    } else if (c != ' ' && in_whitespace) {
-      in_whitespace = 0;
-      int tabs = num_spaces / tabwidth;
-      int spaces = num_spaces % tabwidth;
+    } else if (c != ' ' && num_spaces > 0) {
+      int tabs_to_add = num_spaces / tabwidth;
+      int spaces_to_add = num_spaces % tabwidth;
 
-      while (tabs > 0) {
+      while (tabs_to_add > 0) {
         line[j] = '\t';
-        --tabs;
+        --tabs_to_add;
         ++j;
       }
 
-      while (spaces > 0) {
+      while (spaces_to_add > 0) {
         line[j] = ' ';
-        --spaces;
+        --spaces_to_add;
         ++j;
       }
 
