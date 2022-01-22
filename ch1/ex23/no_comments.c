@@ -2,23 +2,17 @@
 
 #define MAXLINE 1000
 
-/*
- * TODO:
- * x double slash single line comment
- * - slash-asterisk comment on single-line
- * - slash-asterisk comment on multi-lines
- */
-
 int mygetline(char s[], int m);
 
 int main() {
   int i, c;
+  int prev_c = -1;
   char current[MAXLINE];
   int in_double_quotes = 0;
   int in_single_quotes = 0;
   int in_block_comment = 0;
-  int prev_c = -1;
-  int break_loop;
+  int block_comment_start = 0;
+  int break_loop = 0;
 
   while (mygetline(current, MAXLINE) > 0) {
     for (i = 0; (c = current[i]) && c != '\0'; ++i) {
@@ -44,8 +38,8 @@ int main() {
             break_loop = 1;
           }
           else if (prev_c == '*' && in_block_comment) {
-            current[0] = '\n';
-            current[1] = '\0';
+            current[block_comment_start] = '\n';
+            current[block_comment_start + 1] = '\0';
             in_block_comment = 0;
             break_loop = 1;
           }
@@ -54,9 +48,7 @@ int main() {
         case '*':
           if (prev_c == '/' && !in_double_quotes && !in_single_quotes) {
             in_block_comment = 1;
-            current[i - 1] = '\n';
-            current[i] = '\0';
-            break_loop = 1;
+            block_comment_start = i - 1;
           }
           break;
       }
@@ -70,8 +62,9 @@ int main() {
     }
 
     if (in_block_comment) {
-      current[0] = '\n';
-      current[1] = '\0';
+      current[block_comment_start] = '\n';
+      current[block_comment_start + 1] = '\0';
+      block_comment_start = 0;
     }
 
     in_double_quotes = 0;
