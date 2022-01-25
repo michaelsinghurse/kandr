@@ -1,18 +1,5 @@
 #include <stdio.h>
 
-/*
- * TODO:
- * X missing closing ' (end of line)
- * X missing closing " (end of line)
- * - single and double quotes closed in wrong order
- * X missing closing }
- * - missing closing )
- * X missing closing ]
- * - missing closing block comment - star-slash
- * - unbalanced braces, brackets, parens
- *
- */
-
 #define MAXLINE 1000
 #define MAXTOKENS 100
 
@@ -26,13 +13,27 @@ int main() {
   int line_num = 0;
   int in_single_quotes = 0;
   int in_double_quotes = 0;
+  int in_block_comment = 0;
 
   while (mygetline(current, MAXLINE) > 0) {
     ++line_num;
 
     // WALK DOWN THE LINE
     for (i = 0; (c = current[i]) != '\0'; ++i) {
+      if (in_block_comment && c != '/')
+        continue;
+      else if (in_block_comment && c == '/' && 
+               i > 0 && current[i - 1] == '*') {
+        in_block_comment = 0;
+        continue;
+      }
+
       switch (c) {
+        case '*':
+          if (i > 0 && current[i - 1] == '/')
+            in_block_comment = 1;
+          break;
+
         case '\'':
           if (in_single_quotes)
             in_single_quotes = 0;
@@ -73,8 +74,23 @@ int main() {
             --token_index;
           break;
 
+        case '(':
+          ++token_index;
+          tokens[token_index] = c;
+          break;
+
+        case ')':
+          if (token_index == -1 || tokens[token_index] != '(') {
+            printf("%s %d\n", "SyntaxError: Unexpected ')' on line", line_num);
+            return 1;
+          } else 
+            --token_index;
+          break;
+
         case ';':
-          if (token_index > -1 && tokens[token_index] == '[') {
+          if (token_index > -1 && 
+              (tokens[token_index] == '[' || tokens[token_index] == '(')
+             ) {
             printf("%s %d:\n", "SyntaxError: Unexpected ';' on line", line_num);
             printf("%s", current);
             return 1;
@@ -99,10 +115,16 @@ int main() {
   }
 
   // AFTER WE FINISH WITH ALL LINES
+  if (in_block_comment) {
+    printf("%s\n", "SyntaxError: Did not close block comment.");
+    return 1;
+  }
+
   if (token_index != -1) {
     printf("%s %c\n", "SyntaxError: Missing closer for", tokens[token_index]);
     return 1;
   }
+
 
   return 0;
 }
