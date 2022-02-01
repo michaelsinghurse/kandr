@@ -34,18 +34,20 @@ int binsearch(int needle, int haystack[], int len) {
 
   low = 0;
   high = len - 1;
+  mid = (low + high) / 2;
 
-  while (low <= high) {
-    mid = (low + high) / 2;
-
+  while (low <= high && haystack[mid] != needle) {
     if (haystack[mid] < needle)
       low = mid + 1;
-    else if (haystack[mid] > needle)
-      high = mid -1;
     else
-      return mid;
+      high = mid -1;
+
+    mid = (low + high) / 2;
   }
 
-  return -1;
+  if (haystack[mid] == needle)
+    return mid;
+  else
+    return -1;
 }
 
