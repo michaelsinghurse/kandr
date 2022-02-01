@@ -29,6 +29,7 @@ int main() {
   return 0;
 }
 
+// SOLUTION TO PROBLEM
 int binsearch(int needle, int haystack[], int len) {
   int low, mid, high;
 
@@ -50,4 +51,27 @@ int binsearch(int needle, int haystack[], int len) {
   else
     return -1;
 }
+
+/*
+// ORIGINAL IMPLEMENTATION
+int binsearch(int needle, int haystack[], int len) {
+  int low, mid, high;
+
+  low = 0;
+  high = len - 1;
+
+  while (low <= high) {
+    mid = (low + high) / 2;
+
+    if (haystack[mid] < needle)
+      low = mid + 1;
+    else if (haystack[mid] > needle)
+      high = mid -1;
+    else
+      return mid;
+  }
+
+  return -1;
+}
+*/
 
