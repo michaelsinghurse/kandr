@@ -14,19 +14,30 @@ int tokentype;
 char token[MAXTOKEN];
 char name[MAXTOKEN];
 char datatype[MAXTOKEN];
-char out[MAXTOKEN * 10];
+char out[MAXTOKEN];
 
+/* undcl: convert word description to declaration */
 int main(int argc, char **argv)
 {
+  int type;
+  char temp[MAXTOKEN * 2];
+
   while (gettoken() != EOF) {
-    strcpy(datatype, token);
-    out[0] = '\0';
-    dcl();
+    strcpy(out, token);
+    
+    while ((type = gettoken()) != '\n')
+      if (type == PARENS || type == BRACKETS)
+        strcat(out, token);
+      else if (type == '*') {
+        sprintf(temp, "(*%s)", out);
+        strcpy(out, temp);
+      } else if (type == NAME) {
+        sprintf(temp, "%s %s", token, out);
+        strcpy(out, temp);
+      } else
+        printf("invalid input at %s\n", token);
 
-    if (tokentype != '\n')
-      printf("sytax error\n");
-
-    printf("%s: %s %s\n", name, out, datatype);
+    printf("%s\n", out);
   }
 
   return 0;
@@ -70,15 +81,14 @@ void dirdcl(void)
 
 int gettoken(void)
 {
-  int c; 
-  char getch(void);
+  int c, getch(void);
   void ungetch(int);
   char *p = token;
   
   while ((c= getch()) == ' ' || c == '\t')
     ;
 
-  if (c = '(') {
+  if (c == '(') {
     if ((c = getch()) == ')') {
       strcpy(token, "()");
       return tokentype = PARENS;
@@ -86,7 +96,7 @@ int gettoken(void)
       ungetch(c);
       return tokentype = '(';
     }
-  } else if (c = '[') {
+  } else if (c == '[') {
     for (*p++ = c; (*p++ = getch()) != ']'; )
       ;
     *p = '\0';

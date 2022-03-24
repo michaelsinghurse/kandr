@@ -2,10 +2,10 @@
 
 #define BUFSIZE 100
 
-char buf[BUFSIZE];
-char *pbuf;
+static int buf[BUFSIZE];
+static int *pbuf = buf;
 
-char getch(void)
+int getch(void)
 {
   if (pbuf > buf)
     return *--pbuf;
@@ -13,7 +13,7 @@ char getch(void)
     return getchar();
 }
 
-void ungetch(char c)
+void ungetch(int c)
 {
   if (pbuf - buf < BUFSIZE)
     *pbuf++ = c;
