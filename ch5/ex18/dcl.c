@@ -11,23 +11,41 @@ void dirdcl(void);
 int gettoken(void);
 
 int tokentype;
+char line[MAXTOKEN * 10];
+char *pl = line;
 char token[MAXTOKEN];
 char name[MAXTOKEN];
 char datatype[MAXTOKEN];
 char out[MAXTOKEN * 10];
 
 /* dcl: convert declaration to word description */
+/*
+ * TODO:
+ * x skip empty lines '\n\0'
+ * - "Make dcl recover from input errors" => Just say invalid input and write
+ *   the input and move to the next line
+ */
 int main(int argc, char **argv)
 {
   while (gettoken() != EOF) {
+    if (tokentype == '\n') {
+      pl = line;
+      continue;
+    }
+
     strcpy(datatype, token);
     out[0] = '\0';
     dcl();
 
-    if (tokentype != '\n')
-      printf("syntax error\n");
+    if (tokentype != '\n') {
+      *pl = '\0';
+      printf("invalid declaration: %s\n", line);
+      pl = line;
+      continue;
+    }
 
     printf("%s: %s %s\n", name, out, datatype);
+    pl = line;
   }
 
   return 0;
@@ -73,31 +91,46 @@ int gettoken(void)
 {
   int c, getch(void);
   void ungetch(int);
-  char *p = token;
+  char *pt = token;
   
   while ((c= getch()) == ' ' || c == '\t')
-    ;
+    *pl++ = c;
 
   if (c == '(') {
     if ((c = getch()) == ')') {
       strcpy(token, "()");
+      *pl++ = '(';
+      *pl++ = ')';
       return tokentype = PARENS;
     } else {
+      *pl++ = '(';
       ungetch(c);
       return tokentype = '(';
     }
   } else if (c == '[') {
-    for (*p++ = c; (*p++ = getch()) != ']'; )
-      ;
-    *p = '\0';
+    *pt++ = c;
+    *pl++ = c;
+    while ((c = getch()) != ']') {
+      *pt++ = c;
+      *pl++ = c;
+    }
+    *pt++ = c;
+    *pl++ = c;
+    *pt = '\0';
     return tokentype = BRACKETS;
   } else if (isalpha(c)) {
-    for (*p++ = c; isalnum(c = getch()); )
-      *p++ = c;
-    *p = '\0';
+    *pt++ = c;
+    *pl++ = c;
+    while (isalnum(c = getch())) {
+      *pt++ = c;
+      *pl++ = c;
+    }
+    *pt = '\0';
     ungetch(c);
     return tokentype = NAME;
-  } else
+  } else {
+    *pl++ = c;
     return tokentype = c;
+  }
 }
 
