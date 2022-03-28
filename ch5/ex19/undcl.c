@@ -15,21 +15,30 @@ char token[MAXTOKEN];
 char name[MAXTOKEN];
 char datatype[MAXTOKEN];
 char out[MAXTOKEN];
+char line[MAXTOKEN * 10];
+char *pl = line;
 
 /* undcl: convert word description to declaration */
 int main(int argc, char **argv)
 {
   int type;
+  int prevtype;
   char temp[MAXTOKEN * 2];
 
-  while (gettoken() != EOF) {
+  while ((type = gettoken()) != EOF) {
     strcpy(out, token);
-    
-    while ((type = gettoken()) != '\n')
-      if (type == PARENS || type == BRACKETS)
+
+    prevtype = type;
+    while ((type = gettoken()) != '\n') {
+      if (type == PARENS || type == BRACKETS) {
+        if (prevtype == '*') {
+          sprintf(temp, "(%s)", out);
+          strcpy(out, temp);
+        }
+
         strcat(out, token);
-      else if (type == '*') {
-        sprintf(temp, "(*%s)", out);
+      } else if (type == '*') {
+        sprintf(temp, "*%s", out);
         strcpy(out, temp);
       } else if (type == NAME) {
         sprintf(temp, "%s %s", token, out);
@@ -37,7 +46,16 @@ int main(int argc, char **argv)
       } else
         printf("invalid input at %s\n", token);
 
-    printf("%s\n", out);
+      prevtype = type;
+    }
+
+    *pl = '\0';
+    printf("line: %s\n", line);
+    printf("code: %s\n", out);
+    printf("\n");
+
+    line[0] = '\0';
+    pl = line;
   }
 
   return 0;
@@ -83,13 +101,15 @@ int gettoken(void)
 {
   int c, getch(void);
   void ungetch(int);
-  char *p = token;
-  
+  char *pt = token;
+
   while ((c= getch()) == ' ' || c == '\t')
-    ;
+    *pl++ = c;
 
   if (c == '(') {
+    *pl++ = c;
     if ((c = getch()) == ')') {
+      *pl++ = c;
       strcpy(token, "()");
       return tokentype = PARENS;
     } else {
@@ -97,17 +117,29 @@ int gettoken(void)
       return tokentype = '(';
     }
   } else if (c == '[') {
-    for (*p++ = c; (*p++ = getch()) != ']'; )
-      ;
-    *p = '\0';
+    *pl++ = c;
+    for (*pt++ = c; (c = getch()) != ']'; ) {
+      *pl++ = c;
+      *pt++ = c;
+    }
+    *pl++ = c;
+    *pt++ = c;
+    *pt = '\0';
     return tokentype = BRACKETS;
   } else if (isalpha(c)) {
-    for (*p++ = c; isalnum(c = getch()); )
-      *p++ = c;
-    *p = '\0';
+    *pl++ = c;
+    for (*pt++ = c; isalnum(c = getch()); ) {
+      *pl++ = c;
+      *pt++ = c;
+    }
+    *pt = '\0';
     ungetch(c);
     return tokentype = NAME;
-  } else
+  } else {
+    if (c != '\n')
+      *pl++ = c;
+
     return tokentype = c;
+  }
 }
 
