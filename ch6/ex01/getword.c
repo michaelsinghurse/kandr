@@ -1,6 +1,14 @@
 #include <stdio.h>
 #include <ctype.h>
 
+/*
+ * TODO:
+ * - underscores - my_var, _var
+ * - string constants `"int"` - should not count toward int keyword
+ * - comments - ignore everything in comments
+ * X preprocessor control lines - lines beginning with `#` perhaps proceeded by
+ *   whitespace
+ */
 int getword(char *word, int lim)
 {
   int c, getch(void);
@@ -9,6 +17,35 @@ int getword(char *word, int lim)
 
   while (isspace(c = getch()))
     ;
+
+  // preprocessor control line - read to first non-whitespace char on next line
+  if (c == '#') {
+    while (getch() != '\n')
+      ;
+
+    while (isspace(c = getch()))
+      ;
+  }
+
+  // comment - read to end of line if single-line comment and to closing
+  // token if multi-line comment
+  if (c == '/')
+    if ((c = getch()) == '/') {
+      while (getch() != '\n')
+        ;
+
+      while (isspace(c = getch()))
+        ;
+    } else if (c == '*') {
+      while (1)
+        if ((c = getch()) == '*')
+          if ((c = getch()) == '/')
+            break;
+
+      while (isspace(c = getch()))
+        ;
+    } else
+      ungetch(c);
 
   if (c != EOF)
     *w++ = c;
