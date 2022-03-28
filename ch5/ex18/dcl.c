@@ -11,41 +11,46 @@ void dirdcl(void);
 int gettoken(void);
 
 int tokentype;
-char line[MAXTOKEN * 10];
-char *pl = line;
 char token[MAXTOKEN];
 char name[MAXTOKEN];
 char datatype[MAXTOKEN];
 char out[MAXTOKEN * 10];
+char line[MAXTOKEN * 10];
+char *pl = line;
 
 /* dcl: convert declaration to word description */
 /*
  * TODO:
  * x skip empty lines '\n\0'
- * - "Make dcl recover from input errors" => Just say invalid input and write
- *   the input and move to the next line
+ * - capture each input line
+ * - cache error messages and number of errors
+ * - if there is an error, output error messages and input line
  */
 int main(int argc, char **argv)
 {
   while (gettoken() != EOF) {
     if (tokentype == '\n') {
       pl = line;
+      pl[0] = '\0';
       continue;
     }
 
     strcpy(datatype, token);
     out[0] = '\0';
     dcl();
+    *pl = '\0';
 
     if (tokentype != '\n') {
-      *pl = '\0';
-      printf("invalid declaration: %s\n", line);
-      pl = line;
-      continue;
+      printf("syntax error\n");
+    } else {
+      //printf("%s: %s %s\n", name, out, datatype);
     }
 
-    printf("%s: %s %s\n", name, out, datatype);
+    printf("HERE\n");
+    printf("line: %s", line);
+
     pl = line;
+    pl[0] = '\0';
   }
 
   return 0;
@@ -77,6 +82,9 @@ void dirdcl(void)
   else
     printf("error: expected name or (dcl)\n");
 
+  if (tokentype == '\n')
+    return;
+
   while ((type = gettoken()) == PARENS || type == BRACKETS)
     if (type == PARENS)
       strcat(out, " function returning");
@@ -97,33 +105,30 @@ int gettoken(void)
     *pl++ = c;
 
   if (c == '(') {
+    *pl++ = c;
     if ((c = getch()) == ')') {
+      *pl++ = c;
       strcpy(token, "()");
-      *pl++ = '(';
-      *pl++ = ')';
       return tokentype = PARENS;
     } else {
-      *pl++ = '(';
       ungetch(c);
       return tokentype = '(';
     }
   } else if (c == '[') {
-    *pt++ = c;
     *pl++ = c;
-    while ((c = getch()) != ']') {
-      *pt++ = c;
+    for (*pt++ = c; (c = getch()) != ']'; ) {
       *pl++ = c;
+      *pt++ = c;
     }
-    *pt++ = c;
     *pl++ = c;
+    *pt++ = c;
     *pt = '\0';
     return tokentype = BRACKETS;
   } else if (isalpha(c)) {
-    *pt++ = c;
     *pl++ = c;
-    while (isalnum(c = getch())) {
-      *pt++ = c;
+    for (*pt++ = c; isalnum(c = getch()); ) {
       *pl++ = c;
+      *pt++ = c;
     }
     *pt = '\0';
     ungetch(c);
