@@ -5,7 +5,7 @@
  * TODO:
  * - underscores - my_var, _var
  * - string constants `"int"` - should not count toward int keyword
- * - comments - ignore everything in comments
+ * X comments - ignore everything in comments
  * X preprocessor control lines - lines beginning with `#` perhaps proceeded by
  *   whitespace
  */
