@@ -17,15 +17,12 @@ char datatype[MAXTOKEN];
 char out[MAXTOKEN * 10];
 char line[MAXTOKEN * 10];
 char *pl = line;
+char errs[MAXTOKEN * 10];
+int errcount = 0;
+int openparens = 0;
+int openbrackets = 0;
 
 /* dcl: convert declaration to word description */
-/*
- * TODO:
- * x skip empty lines '\n\0'
- * - capture each input line
- * - cache error messages and number of errors
- * - if there is an error, output error messages and input line
- */
 int main(int argc, char **argv)
 {
   while (gettoken() != EOF) {
@@ -40,17 +37,24 @@ int main(int argc, char **argv)
     dcl();
     *pl = '\0';
 
-    if (tokentype != '\n') {
-      printf("syntax error\n");
-    } else {
-      //printf("%s: %s %s\n", name, out, datatype);
-    }
-
-    printf("HERE\n");
-    printf("line: %s", line);
+    if (tokentype != '\n' || errcount > 0 || openparens > 0 || openbrackets > 0) {
+      if (openparens > 0)
+        printf("syntax error in declaration: %s\n\tmissing closing )\n", line);
+      else if (openbrackets > 0) 
+        printf("syntax error in declaration: %s\n\tmissing bracket ]\n", line);
+      else
+        printf("syntax error in declaration: %s\n%s", line, errs);
+    } else
+      printf("%s: %s %s\n", name, out, datatype);
 
     pl = line;
     pl[0] = '\0';
+    name[0] = '\0';
+    datatype[0] = '\0';
+    errs[0] = '\0';
+    errcount = 0;
+    openparens = 0;
+    openbrackets = 0;
   }
 
   return 0;
@@ -76,11 +80,14 @@ void dirdcl(void)
   if (tokentype == '(') {
     dcl();
     if (tokentype != ')')
-      printf("error: missing )\n");
+      errcount += 1;
+      strcat(errs, "\terror: missing closing )\n");
   } else if (tokentype == NAME)
     strcpy(name, token);
-  else
-    printf("error: expected name or (dcl)\n");
+  else {
+    errcount += 1;
+    strcat(errs, "\terror: expected name or (dcl)\n");
+  }
 
   if (tokentype == '\n')
     return;
@@ -100,14 +107,16 @@ int gettoken(void)
   int c, getch(void);
   void ungetch(int);
   char *pt = token;
-  
+
   while ((c= getch()) == ' ' || c == '\t')
     *pl++ = c;
 
   if (c == '(') {
     *pl++ = c;
+    openparens++;    
     if ((c = getch()) == ')') {
       *pl++ = c;
+      openparens--;
       strcpy(token, "()");
       return tokentype = PARENS;
     } else {
@@ -116,12 +125,14 @@ int gettoken(void)
     }
   } else if (c == '[') {
     *pl++ = c;
+    openbrackets++;
     for (*pt++ = c; (c = getch()) != ']'; ) {
       *pl++ = c;
       *pt++ = c;
     }
     *pl++ = c;
     *pt++ = c;
+    openbrackets--;
     *pt = '\0';
     return tokentype = BRACKETS;
   } else if (isalpha(c)) {
@@ -134,7 +145,12 @@ int gettoken(void)
     ungetch(c);
     return tokentype = NAME;
   } else {
-    *pl++ = c;
+    if (c != '\n')
+      *pl++ = c;
+
+    if (c == ')')
+      openparens--;
+
     return tokentype = c;
   }
 }
