@@ -1,14 +1,6 @@
 #include <stdio.h>
 #include <ctype.h>
 
-/*
- * TODO:
- * - underscores - my_var, _var
- * - string constants `"int"` - should not count toward int keyword
- * X comments - ignore everything in comments
- * X preprocessor control lines - lines beginning with `#` perhaps proceeded by
- *   whitespace
- */
 int getword(char *word, int lim)
 {
   int c, getch(void);
@@ -23,40 +15,44 @@ int getword(char *word, int lim)
     while (getch() != '\n')
       ;
 
-    while (isspace(c = getch()))
-      ;
+    return getword(word, lim);
   }
 
-  // comment - read to end of line if single-line comment and to closing
-  // token if multi-line comment
+  // comment - read to NL if single-line comment or closing tag if multi-line
   if (c == '/')
     if ((c = getch()) == '/') {
       while (getch() != '\n')
         ;
 
-      while (isspace(c = getch()))
-        ;
+      return getword(word, lim);
     } else if (c == '*') {
       while (1)
         if ((c = getch()) == '*')
           if ((c = getch()) == '/')
             break;
 
-      while (isspace(c = getch()))
-        ;
+      return getword(word, lim);
     } else
       ungetch(c);
+
+  // string constants - ignore everything within double quotes
+  if (c == '"') {
+    while ((c = getch()) != '"')
+      ;
+
+    return getword(word, lim);
+  }
 
   if (c != EOF)
     *w++ = c;
 
-  if (!isalpha(c)) {
+  if (!isalpha(c) && c != '_') {
     *w = '\0';
     return c;
   }
 
   for ( ; --lim > 0; w++)
-    if (!isalnum(*w = getch())) {
+    if (!isalnum(*w = getch()) && *w != '_') {
       ungetch(*w);
       break;
     }
@@ -64,3 +60,4 @@ int getword(char *word, int lim)
   *w = '\0';
   return *word;
 }
+
