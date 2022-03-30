@@ -15,27 +15,32 @@ struct tnode {
 
 int isnoise(char *);
 struct tnode *addtree(struct tnode *, char *);
-void printwords(struct tnode *);
+struct tnode list[MAXWORDS];
+struct tnode *plist;
+void tree2list(struct tnode *);
+void printlist(struct tnode *, int);
 int getword(char *, int);
-void tree2list(struct tnode *, struct tnode *);
 void qsort(void *, int, int, int (*comp)(void *, void *));
-int structcmp(void *, void *);
+int tnodecmp(struct tnode *, struct tnode *);
 
 int main(int argc, char **argv)
 {
   int c, count;
   struct tnode *root;
   char word[MAXWORD];
-  struct tnode words[MAXWORDS];
 
   root = NULL;
   while ((c = getword(word, MAXWORD)) != EOF)
     if (isalpha(word[0]) && !isnoise(word))
       root = addtree(root, word);
 
-  count = tree2list(root, words);
-  //qsort(words);
-  printwords(words, count);
+  plist = list;
+  tree2list(root);
+
+  count = plist - list;
+
+  qsort(list, 0, count-1, (int (*)(void *, void *)) tnodecmp);
+  printlist(list, count);
 
   return 0;
 }
@@ -64,19 +69,25 @@ struct tnode *addtree(struct tnode *p, char *w)
   return p;
 }
 
-int tree2list(struct tnode *ptree, struct tnode *list)
+void tree2list(struct tnode *ptree)
 {
-  int count = 0;
-
   if (ptree == NULL)
-    return count;
+    return;
 
-  count += treeprint(ptree->left);
-  printf("%5d %s\n", ptree->count, ptree->word);
-  count += 1;
-  count += treeprint(ptree->right);
+  tree2list(ptree->left);
 
-  return count;
+  *plist++ = *ptree;
+
+  tree2list(ptree->right);
+}
+
+void printlist(struct tnode *list, int n)
+{
+  int i;
+
+  for (i = 0; i < n; i++) {
+    printf("%4d %s\n", list[i].count, list[i].word);
+  }
 }
 
 int isnoise(char *s) {
@@ -87,3 +98,7 @@ int isnoise(char *s) {
     strcmp(s, "an") == 0;
 }
 
+int tnodecmp(struct tnode *a, struct tnode *b)
+{
+  return a->count - b->count;
+}
