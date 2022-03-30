@@ -1,15 +1,16 @@
-void swap(void *v, int i, int j)
+void swap(void *v[], int i, int j)
 {
-  void temp;
+  void *temp;
 
   temp = v[i];
   v[i] = v[j];
   v[j] = temp;
 }
 
-void qsort(void *v, int left, int right, int (*comp)(void *, void *));
+void myqsort(void *v[], int left, int right, int (*comp)(void *, void *))
 {
   int i, last;
+  void swap(void *v[], int, int);
 
   if (left >= right)
     return;
@@ -22,7 +23,7 @@ void qsort(void *v, int left, int right, int (*comp)(void *, void *));
       swap(v, ++last, i);
 
   swap(v, left, last);
-  qsort(v, left, last - 1, comp);
-  qsort(v, last + 1, right, comp);
+  myqsort(v, left, last - 1, comp);
+  myqsort(v, last + 1, right, comp);
 }
 

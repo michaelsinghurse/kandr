@@ -15,12 +15,12 @@ struct tnode {
 
 int isnoise(char *);
 struct tnode *addtree(struct tnode *, char *);
-struct tnode list[MAXWORDS];
-struct tnode *plist;
+struct tnode *list[MAXWORDS];
+struct tnode **plist;
 void tree2list(struct tnode *);
-void printlist(struct tnode *, int);
+void printlist(struct tnode **, int);
 int getword(char *, int);
-void qsort(void *, int, int, int (*comp)(void *, void *));
+void myqsort(void **, int, int, int (*comp)(void *, void *));
 int tnodecmp(struct tnode *, struct tnode *);
 
 int main(int argc, char **argv)
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 
   count = plist - list;
 
-  qsort(list, 0, count-1, (int (*)(void *, void *)) tnodecmp);
+  myqsort((void **) list, 0, count-1, (int (*)(void *, void *)) tnodecmp);
   printlist(list, count);
 
   return 0;
@@ -76,17 +76,17 @@ void tree2list(struct tnode *ptree)
 
   tree2list(ptree->left);
 
-  *plist++ = *ptree;
+  *plist++ = ptree;
 
   tree2list(ptree->right);
 }
 
-void printlist(struct tnode *list, int n)
+void printlist(struct tnode **list, int n)
 {
   int i;
 
   for (i = 0; i < n; i++) {
-    printf("%4d %s\n", list[i].count, list[i].word);
+    printf("%4d %s\n", list[i]->count, list[i]->word);
   }
 }
 
@@ -102,3 +102,4 @@ int tnodecmp(struct tnode *a, struct tnode *b)
 {
   return a->count - b->count;
 }
+
