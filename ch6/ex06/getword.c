@@ -7,16 +7,8 @@ int getword(char *word, int lim)
   void ungetch(int);
   char *w = word;
 
-  while (isspace(c = getch()))
+  while (isspace(c = getch()) && c != '\n')
     ;
-
-  // preprocessor control line - read to first non-whitespace char on next line
-  if (c == '#') {
-    while (getch() != '\n')
-      ;
-
-    return getword(word, lim);
-  }
 
   // comment - read to NL if single-line comment or closing tag if multi-line
   if (c == '/')
