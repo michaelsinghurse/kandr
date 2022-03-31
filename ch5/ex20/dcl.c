@@ -68,6 +68,43 @@ int main(int argc, char **argv)
   return 0;
 }
 
+void parsefuncarg(void)
+{
+  char datatype[MAXTOKEN];
+  char name[MAXTOKEN];
+  char temp[MAXTOKEN * 20];
+  char fout[MAXTOKEN * 10];
+  int ns;
+  int type;
+
+  gettoken();
+  if (tokentype != NAME)
+    return;
+
+  strcpy(datatype, token);
+
+  for (ns = 0; gettoken() == '*'; )
+    ns++;
+
+  if (tokentype == NAME)
+    strcpy(name, token);
+
+  while ((type = gettoken()) == PARENS || type == BRACKETS)
+    if (type == PARENS)
+      strcat(fout, " function returning");
+    else {
+      strcat(fout, " array");
+      strcat(fout, token);
+      strcat(fout, " of");
+    }
+
+  while (ns-- > 0)
+    strcat(fout, " pointer to");
+
+  sprintf(temp, "(func arg %s: %s %s)", name, fout, datatype);
+  strcat(out, temp);
+}
+
 void dcl(void)
 {
   int ns;
@@ -100,8 +137,12 @@ void dirdcl(void)
   if (tokentype == '\n')
     return;
 
-  while ((type = gettoken()) == PARENS || type == BRACKETS)
-    if (type == PARENS)
+  while ((type = gettoken()) == PARENS || type == BRACKETS || (type == '(' && name[0] != '\0'))
+    if (type == '(') {
+      strcat(out, " function ");
+      parsefuncarg();
+      strcat(out, " returning");
+    } else if (type == PARENS)
       strcat(out, " function returning");
     else {
       strcat(out, " array");
